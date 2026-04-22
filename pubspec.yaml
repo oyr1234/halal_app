@@ -1,0 +1,38 @@
+name: halalapp
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.5.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # Use specific ML Kit plugins instead of the heavy umbrella google_ml_kit
+  google_mlkit_text_recognition: ^0.13.1
+  google_mlkit_barcode_scanning: 0.12.1
+  google_mlkit_smart_reply: ^0.13.1
+
+  camera: ^0.11.0+2
+  image_picker: ^1.1.2
+  sqflite: ^2.4.1
+  path: ^1.9.0
+  provider: ^6.1.2
+  shared_preferences: ^2.3.2
+  flutter_local_notifications: ^21.0.0
+  audioplayers: ^6.1.0
+  vibration: ^2.0.0
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
