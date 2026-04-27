@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'screens/home_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/meal_suggestion_screen.dart'; // 👈 NEW
 import 'services/settings_service.dart';
 import 'services/notification_service.dart';
 
@@ -26,15 +27,20 @@ class MyApp extends StatelessWidget {
             theme: ThemeData.light(useMaterial3: true),
             darkTheme: ThemeData.dark(useMaterial3: true),
             locale: settings.locale,
-            supportedLocales: const [Locale('en'), Locale('fr'), Locale('ar')],
+            supportedLocales: const [
+              Locale('en'),
+              Locale('fr'),
+              Locale('ar'),
+            ],
             localizationsDelegates: const [
               GlobalMaterialLocalizations.delegate,
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,
             ],
-            home: HomeScreen(),
+            home: MealSuggestionScreen(),
             routes: {
               '/settings': (context) => SettingsScreen(),
+              '/meals': (context) => const MealSuggestionScreen(), // 👈 NEW
             },
           );
         },
