@@ -33,17 +33,43 @@ class DatabaseHelper {
     ''');
   }
 
-  Future<void> insertScan(ScanHistory scan) async {
+  // CREATE
+  Future<int> insertScan(ScanHistory scan) async {
     final db = await database;
-    await db.insert('scans', scan.toMap());
+    return await db.insert('scans', scan.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
+  // READ ALL
   Future<List<ScanHistory>> getAllScans() async {
     final db = await database;
     final result = await db.query('scans', orderBy: 'scannedAt DESC');
     return result.map((map) => ScanHistory.fromMap(map)).toList();
   }
 
+  // READ ONE
+  Future<ScanHistory?> getScanById(int id) async {
+    final db = await database;
+    final result =
+    await db.query('scans', where: 'id = ?', whereArgs: [id], limit: 1);
+    if (result.isEmpty) return null;
+    return ScanHistory.fromMap(result.first);
+  }
+
+  // UPDATE
+  Future<int> updateScan(ScanHistory scan) async {
+    final db = await database;
+    return await db.update('scans', scan.toMap(),
+        where: 'id = ?', whereArgs: [scan.id]);
+  }
+
+  // DELETE ONE
+  Future<int> deleteScan(int id) async {
+    final db = await database;
+    return await db.delete('scans', where: 'id = ?', whereArgs: [id]);
+  }
+
+  // DELETE ALL
   Future<void> clearHistory() async {
     final db = await database;
     await db.delete('scans');

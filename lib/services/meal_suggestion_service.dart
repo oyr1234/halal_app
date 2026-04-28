@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import '../models/meal_suggestion.dart';
 
 class MealSuggestionService {
-  static const String _ollamaUrl = 'http://localhost:11434/api/generate';
+  static const String _ollamaUrl = 'http://192.168.100.7:11434/api/generate';
   static const String _model = 'llama3.2:latest';
 
   // ─────────────────────────────
@@ -11,16 +11,14 @@ class MealSuggestionService {
   // ─────────────────────────────
   static Future<List<MealSuggestion>> getSuggestions({
     required String location,
-    required String preferences,
+    required List<String> ingredients,
     required List<String> dietaryRestrictions,
-    String madhab = 'general',
   }) async {
     try {
       return await _getOllamaSuggestions(
         location: location,
-        preferences: preferences,
+        ingredients: ingredients,
         dietaryRestrictions: dietaryRestrictions,
-        madhab: madhab,
       );
     } catch (e) {
       print('Ollama failed: $e');
@@ -33,15 +31,13 @@ class MealSuggestionService {
   // ─────────────────────────────
   static Future<List<MealSuggestion>> _getOllamaSuggestions({
     required String location,
-    required String preferences,
+    required List<String> ingredients,
     required List<String> dietaryRestrictions,
-    required String madhab,
   }) async {
     final prompt = _buildPrompt(
       location,
-      preferences,
+      ingredients,
       dietaryRestrictions,
-      madhab,
     );
 
     final response = await http.post(
@@ -89,50 +85,68 @@ class MealSuggestionService {
       }
     }
 
-    return list
-        .map((e) => MealSuggestion.fromJson(e))
-        .toList();
+    return list.map((e) => MealSuggestion.fromJson(e)).toList();
   }
 
   // ─────────────────────────────
-  // PROMPT (FIXED)
+  // PROMPT
   // ─────────────────────────────
   static String _buildPrompt(
       String location,
-      String preferences,
+      List<String> ingredients,
       List<String> restrictions,
-      String madhab,
       ) {
+    final ingredientList = ingredients.isNotEmpty
+        ? ingredients.join(', ')
+        : 'common pantry staples';
+
+    final restrictionText = restrictions.isNotEmpty
+        ? restrictions.join(', ')
+        : 'none';
+
     return '''
-Return ONLY valid JSON array.
+Return ONLY a valid JSON array. No text before or after. No markdown.
 
-Generate 4 halal meals in $location.
+You are a chef. Suggest 4 meals that can be made using these available ingredients:
+[$ingredientList]
 
-Preferences: $preferences
-Restrictions: ${restrictions.join(', ')}
+Location/cuisine context: $location
+Dietary restrictions: $restrictionText
 
-Each meal MUST include:
-name, description, ingredients, cuisineType,
-preparationTime, halalNotes, emoji, recipeSteps
+Rules:
+- Meals do NOT have to be exclusively halal, but MUST include a halalNotes field explaining any halal considerations or substitutions (e.g. use halal-certified meat, omit alcohol, etc.)
+- Use as many of the provided ingredients as possible
+- You may add common pantry items (salt, oil, water, spices) if needed
+- Each meal must have detailed step-by-step preparation instructions
 
-IMPORTANT:
-- recipeSteps MUST be an array of strings
-- each step must start with action verb
-- NO text outside JSON
+Each object MUST have exactly these fields:
+- name: string
+- description: string (1–2 sentences)
+- ingredients: array of strings (only what is actually used)
+- cuisineType: string
+- preparationTime: string (e.g. "30 min")
+- halalNotes: string (halal guidance or "No special halal concerns for this dish")
+- emoji: single emoji string
+- recipeSteps: array of strings — MINIMUM 5 steps, each starting with an action verb, detailed enough to actually cook the meal
 
-Format:
+Example format:
 [
   {
-    "name": "Example",
-    "description": "...",
-    "ingredients": ["..."],
-    "cuisineType": "...",
-    "preparationTime": "...",
-    "halalNotes": "...",
-    "emoji": "🍛",
+    "name": "Tomato Egg Stir-fry",
+    "description": "A quick and comforting Chinese home-style dish.",
+    "ingredients": ["eggs", "tomatoes", "garlic", "salt", "oil"],
+    "cuisineType": "Chinese",
+    "preparationTime": "15 min",
+    "halalNotes": "All ingredients are halal. No concerns.",
+    "emoji": "🍳",
     "recipeSteps": [
-      "Step 1",
-      "Step 2"
+      "Crack 3 eggs into a bowl, add a pinch of salt, and beat well.",
+      "Dice 2 tomatoes into medium chunks and mince 2 garlic cloves.",
+      "Heat oil in a wok over high heat until shimmering.",
+      "Pour in eggs and scramble until just set, then remove from pan.",
+      "Add garlic to the same pan and stir-fry for 30 seconds until fragrant.",
+      "Add tomatoes and cook for 2 minutes until they release their juices.",
+      "Return eggs to the pan, season with salt, toss together and serve hot."
     ]
   }
 ]
@@ -151,26 +165,27 @@ Format:
   }
 
   // ─────────────────────────────
-  // FALLBACK (FIXED)
+  // FALLBACK
   // ─────────────────────────────
   static List<MealSuggestion> _getLocalSuggestions() {
     return [
       MealSuggestion(
-        name: 'Grilled Chicken Plate',
-        description: 'Simple halal chicken with rice and salad.',
-        ingredients: ['chicken', 'rice', 'salad'],
-        cuisineType: 'International',
+        name: 'Garlic Fried Rice',
+        description: 'A simple and satisfying fried rice using pantry staples.',
+        ingredients: ['rice', 'garlic', 'eggs', 'soy sauce', 'oil'],
+        cuisineType: 'Asian',
         preparationTime: '20 min',
-        halalNotes: 'Ensure halal-certified chicken.',
-        emoji: '🍗',
-
-        // 🔥 IMPORTANT FIX
+        halalNotes: 'All ingredients are halal. Ensure soy sauce has no alcohol additives.',
+        emoji: '🍚',
         recipeSteps: [
-          'Season chicken with spices',
-          'Grill until fully cooked',
-          'Cook rice with salt',
-          'Prepare fresh salad',
-          'Serve together on plate',
+          'Cook rice and let it cool completely (or use day-old rice).',
+          'Mince 4 garlic cloves finely.',
+          'Heat oil in a large pan or wok over high heat.',
+          'Add garlic and stir-fry for 30 seconds until golden and fragrant.',
+          'Push garlic to the side, crack in eggs, and scramble until just cooked.',
+          'Add cold rice and break up any clumps, tossing everything together.',
+          'Drizzle soy sauce over the rice, stir-fry for 2 more minutes.',
+          'Taste, adjust seasoning, and serve immediately.',
         ],
       ),
     ];

@@ -1,14 +1,22 @@
 import 'package:flutter/material.dart';
 import '../models/meal_suggestion.dart';
 
-class MealCard extends StatelessWidget {
+class MealCard extends StatefulWidget {
   final MealSuggestion meal;
   const MealCard({super.key, required this.meal});
+
+  @override
+  State<MealCard> createState() => _MealCardState();
+}
+
+class _MealCardState extends State<MealCard> {
+  bool _stepsExpanded = false;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final meal = widget.meal;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
@@ -96,6 +104,86 @@ class MealCard extends StatelessWidget {
                 ],
               ),
             ),
+
+            // ─── Recipe Steps ───
+            if (meal.recipeSteps.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              InkWell(
+                borderRadius: BorderRadius.circular(10),
+                onTap: () =>
+                    setState(() => _stepsExpanded = !_stepsExpanded),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primaryContainer.withOpacity(0.4),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    children: [
+                      const Text('👨‍🍳', style: TextStyle(fontSize: 16)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Preparation Steps (${meal.recipeSteps.length})',
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            color: colorScheme.onPrimaryContainer,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      Icon(
+                        _stepsExpanded
+                            ? Icons.keyboard_arrow_up
+                            : Icons.keyboard_arrow_down,
+                        color: colorScheme.primary,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              if (_stepsExpanded) ...[
+                const SizedBox(height: 8),
+                ...meal.recipeSteps.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final step = entry.value;
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Step number bubble
+                        Container(
+                          width: 26,
+                          height: 26,
+                          margin: const EdgeInsets.only(top: 1, right: 10),
+                          decoration: BoxDecoration(
+                            color: colorScheme.primary,
+                            shape: BoxShape.circle,
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            '${index + 1}',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: colorScheme.onPrimary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        // Step text
+                        Expanded(
+                          child: Text(
+                            step,
+                            style: theme.textTheme.bodySmall,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              ],
+            ],
           ],
         ),
       ),

@@ -12,21 +12,37 @@ class MealSuggestionScreen extends StatefulWidget {
 
 class _MealSuggestionScreenState extends State<MealSuggestionScreen> {
   final TextEditingController _locationController = TextEditingController();
-  final TextEditingController _preferencesController = TextEditingController();
+  final TextEditingController _ingredientInputController = TextEditingController(); // ← new
 
+  final List<String> _ingredients = [];
   List<MealSuggestion> _suggestions = [];
   bool _isLoading = false;
   String _error = '';
-  String _selectedMadhab = 'general';
   final List<String> _selectedRestrictions = [];
 
-  final List<String> _madhabs = [
-    'general', 'hanafi', 'shafii', 'maliki', 'hanbali'
-  ];
   final List<String> _restrictionOptions = [
     'gluten-free', 'dairy-free', 'nut-free', 'vegan', 'low-spice'
   ];
 
+  // ─── Add ingredient from text field ───
+  void _addIngredient() {
+    final value = _ingredientInputController.text.trim();
+    if (value.isEmpty) return;
+    if (_ingredients.contains(value.toLowerCase())) {
+      _ingredientInputController.clear();
+      return;
+    }
+    setState(() {
+      _ingredients.add(value.toLowerCase());
+      _ingredientInputController.clear();
+    });
+  }
+
+  void _removeIngredient(String ingredient) {
+    setState(() => _ingredients.remove(ingredient));
+  }
+
+  // ─── Fetch suggestions ───
   Future<void> _getSuggestions() async {
     if (_locationController.text.trim().isEmpty) {
       setState(() => _error = 'Please enter your location');
@@ -42,9 +58,8 @@ class _MealSuggestionScreenState extends State<MealSuggestionScreen> {
     try {
       final results = await MealSuggestionService.getSuggestions(
         location: _locationController.text.trim(),
-        preferences: _preferencesController.text.trim(),
+        ingredients: List<String>.from(_ingredients),
         dietaryRestrictions: _selectedRestrictions,
-        madhab: _selectedMadhab,
       );
       setState(() => _suggestions = results);
     } catch (e) {
@@ -57,7 +72,7 @@ class _MealSuggestionScreenState extends State<MealSuggestionScreen> {
   @override
   void dispose() {
     _locationController.dispose();
-    _preferencesController.dispose();
+    _ingredientInputController.dispose();
     super.dispose();
   }
 
@@ -91,7 +106,7 @@ class _MealSuggestionScreenState extends State<MealSuggestionScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Halal Meal AI',
+                            'AI Meal Planner',
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: colorScheme.onPrimaryContainer,
@@ -126,36 +141,68 @@ class _MealSuggestionScreenState extends State<MealSuggestionScreen> {
               ),
             ),
 
-            const SizedBox(height: 12),
-
-            // Preferences input
-            TextField(
-              controller: _preferencesController,
-              decoration: InputDecoration(
-                labelText: 'Food Preferences (optional)',
-                hintText: 'e.g. spicy food, rice dishes, street food',
-                prefixIcon: const Icon(Icons.restaurant),
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12)),
-              ),
-            ),
-
             const SizedBox(height: 16),
 
-            // Madhab selector
-            Text('School of Thought', style: theme.textTheme.labelLarge),
+            // ─── Ingredients input ───
+            Text('Available Ingredients', style: theme.textTheme.labelLarge),
             const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              children: _madhabs.map((m) {
-                final selected = _selectedMadhab == m;
-                return ChoiceChip(
-                  label: Text(m[0].toUpperCase() + m.substring(1)),
-                  selected: selected,
-                  onSelected: (_) => setState(() => _selectedMadhab = m),
-                );
-              }).toList(),
+
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _ingredientInputController,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) => _addIngredient(),
+                    decoration: InputDecoration(
+                      labelText: 'Add ingredient',
+                      hintText: 'e.g. chicken, rice, tomatoes…',
+                      prefixIcon: const Icon(Icons.add_shopping_cart),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                FilledButton.tonal(
+                  onPressed: _addIngredient,
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 16),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Icon(Icons.add),
+                ),
+              ],
             ),
+
+            // Ingredient chips
+            if (_ingredients.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 8,
+                runSpacing: 6,
+                children: _ingredients.map((ingredient) {
+                  return Chip(
+                    label: Text(ingredient),
+                    deleteIcon: const Icon(Icons.close, size: 16),
+                    onDeleted: () => _removeIngredient(ingredient),
+                    backgroundColor:
+                    colorScheme.secondaryContainer,
+                    labelStyle: TextStyle(
+                        color: colorScheme.onSecondaryContainer),
+                  );
+                }).toList(),
+              ),
+            ] else ...[
+              const SizedBox(height: 8),
+              Text(
+                'No ingredients added — AI will suggest meals based on your location.',
+                style: theme.textTheme.bodySmall
+                    ?.copyWith(color: colorScheme.outline),
+              ),
+            ],
 
             const SizedBox(height: 16),
 
@@ -205,7 +252,7 @@ class _MealSuggestionScreenState extends State<MealSuggestionScreen> {
                     : const Icon(Icons.auto_awesome),
                 label: Text(_isLoading
                     ? 'Getting suggestions...'
-                    : 'Get Halal Meal Ideas'),
+                    : 'Get Meal Ideas'),
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(

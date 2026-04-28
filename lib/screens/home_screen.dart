@@ -13,18 +13,15 @@ import '../services/sound_service.dart';
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-  // 🔥 function مشتركة للصوت + vibration
   Future<void> handleFeedback(BuildContext context) async {
     final settings = Provider.of<SettingsService>(context, listen: false);
 
-    // 🔊 sound (محمي)
     try {
       await SoundService.playClick(settings.soundEnabled);
     } catch (e) {
       debugPrint("Sound error: $e");
     }
 
-    // 📳 vibration (محمي)
     try {
       if (settings.vibrationEnabled) {
         final hasVibrator = await Vibration.hasVibrator() ?? false;
@@ -82,6 +79,15 @@ class HomeScreen extends StatelessWidget {
                   MaterialPageRoute(
                       builder: (_) => OcrScannerScreen()),
                 );
+              },
+            ),
+            const SizedBox(height: 20),
+            CustomButton(
+              text: 'Meal Suggestions',
+              icon: Icons.restaurant_menu,
+              onPressed: () async {
+                await handleFeedback(context);
+                Navigator.pushNamed(context, '/meals');
               },
             ),
             const SizedBox(height: 20),

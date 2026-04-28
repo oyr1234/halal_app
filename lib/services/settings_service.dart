@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'notification_service.dart';
+import '../services/notification_service.dart';
 
 class SettingsService extends ChangeNotifier {
-  // ✅ default values (IMPORTANT)
+  // ─── defaults ───
   bool _soundEnabled = true;
   bool _vibrationEnabled = true;
   bool _notificationsEnabled = true;
@@ -16,10 +16,11 @@ class SettingsService extends ChangeNotifier {
   ThemeMode get themeMode => _themeMode;
   Locale get locale => _locale;
 
-  // ✅ نوليوا نستعملو init بدل constructor
+  // ─────────────────────────────
+  // INIT
+  // ─────────────────────────────
   Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
-
 
     _soundEnabled = prefs.getBool('soundEnabled') ?? true;
     _vibrationEnabled = prefs.getBool('vibrationEnabled') ?? true;
@@ -35,11 +36,17 @@ class SettingsService extends ChangeNotifier {
     final lang = prefs.getString('language') ?? 'en';
     _locale = Locale(lang);
 
+    // Re-schedule reminders on app start if they were enabled
+    if (_notificationsEnabled) {
+      await NotificationService.scheduleAllMealReminders();
+    }
+
     notifyListeners();
   }
 
-  // ================== SETTERS ==================
-
+  // ─────────────────────────────
+  // SETTERS
+  // ─────────────────────────────
   Future<void> setSoundEnabled(bool value) async {
     _soundEnabled = value;
     final prefs = await SharedPreferences.getInstance();
@@ -60,7 +67,8 @@ class SettingsService extends ChangeNotifier {
     await prefs.setBool('notificationsEnabled', value);
 
     if (value) {
-      await NotificationService.scheduleDailyReminder();
+      // Schedule breakfast / lunch / dinner reminders
+      await NotificationService.scheduleAllMealReminders();
     } else {
       await NotificationService.cancelAllReminders();
     }
