@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import '../models/meal_suggestion.dart';
 
 class MealSuggestionService {
-  static const String _ollamaUrl = 'http://localhost:11434/api/generate';
+  static const String _ollamaUrl = 'http://192.168.100.7:11434/api/generate';
   static const String _model = 'llama3.2:latest';
 
   // ─────────────────────────────
