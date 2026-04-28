@@ -6,10 +6,13 @@ import 'screens/settings_screen.dart';
 import 'screens/meal_suggestion_screen.dart'; // 👈 NEW
 import 'services/settings_service.dart';
 import 'services/notification_service.dart';
+import 'package:permission_handler/permission_handler.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await NotificationService.init();
+  await Permission.notification.request();
   runApp(MyApp());
 }
 
@@ -17,7 +20,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (context) => SettingsService(),
+      create: (context) {
+        final service = SettingsService();
+        service.init(); // 🔥 هذا المهم
+        return service;
+      },
       child: Consumer<SettingsService>(
         builder: (context, settings, _) {
           return MaterialApp(
@@ -37,7 +44,7 @@ class MyApp extends StatelessWidget {
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,
             ],
-            home: MealSuggestionScreen(),
+            home: HomeScreen(),
             routes: {
               '/settings': (context) => SettingsScreen(),
               '/meals': (context) => const MealSuggestionScreen(), // 👈 NEW

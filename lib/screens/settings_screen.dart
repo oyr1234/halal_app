@@ -1,52 +1,84 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/settings_service.dart';
+import '../utlis/app_localizations.dart'; // 🔥 IMPORTANT
 
 class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settings = Provider.of<SettingsService>(context);
+
+    final t = AppLocalizations(settings.locale.languageCode);
+
     return Scaffold(
-      appBar: AppBar(title: Text('Settings')),
+      appBar: AppBar(
+        title: Text(t.translate('settings')),
+      ),
       body: ListView(
         children: [
           SwitchListTile(
-            title: Text('Sound effects'),
+            title: Text(t.translate('sound')),
             value: settings.soundEnabled,
-            onChanged: settings.setSoundEnabled,
+            onChanged: (val) => settings.setSoundEnabled(val),
           ),
           SwitchListTile(
-            title: Text('Vibration'),
+            title: Text(t.translate('vibration')),
             value: settings.vibrationEnabled,
-            onChanged: settings.setVibrationEnabled,
+            onChanged: (val) => settings.setVibrationEnabled(val),
           ),
           SwitchListTile(
-            title: Text('Daily reminder notifications'),
+            title: Text(t.translate('notifications')),
             value: settings.notificationsEnabled,
-            onChanged: settings.setNotificationsEnabled,
+            onChanged: (val) => settings.setNotificationsEnabled(val),
           ),
           ListTile(
-            title: Text('Theme'),
+            title: Text(t.translate('theme')),
             trailing: DropdownButton<ThemeMode>(
               value: settings.themeMode,
-              items: const [
-                DropdownMenuItem(value: ThemeMode.light, child: Text('Light')),
-                DropdownMenuItem(value: ThemeMode.dark, child: Text('Dark')),
-                DropdownMenuItem(value: ThemeMode.system, child: Text('System')),
+              items: [
+                DropdownMenuItem(
+                  value: ThemeMode.light,
+                  child: Text(t.translate('light')),
+                ),
+                DropdownMenuItem(
+                  value: ThemeMode.dark,
+                  child: Text(t.translate('dark')),
+                ),
+                DropdownMenuItem(
+                  value: ThemeMode.system,
+                  child: Text(t.translate('system')),
+                ),
               ],
-              onChanged: (val) => settings.setThemeMode(val!),
+              onChanged: (val) {
+                if (val != null) {
+                  settings.setThemeMode(val);
+                }
+              },
             ),
           ),
           ListTile(
-            title: Text('Language'),
+            title: Text(t.translate('language')),
             trailing: DropdownButton<Locale>(
               value: settings.locale,
-              items: const [
-                DropdownMenuItem(value: Locale('en'), child: Text('English')),
-                DropdownMenuItem(value: Locale('fr'), child: Text('Français')),
-                DropdownMenuItem(value: Locale('ar'), child: Text('العربية')),
+              items: [
+                DropdownMenuItem(
+                  value: const Locale('en'),
+                  child: Text('English'),
+                ),
+                DropdownMenuItem(
+                  value: const Locale('fr'),
+                  child: Text('Français'),
+                ),
+                DropdownMenuItem(
+                  value: const Locale('ar'),
+                  child: Text('العربية'),
+                ),
               ],
-              onChanged: (val) => settings.setLocale(val!),
+              onChanged: (val) {
+                if (val != null) {
+                  settings.setLocale(val);
+                }
+              },
             ),
           ),
         ],
