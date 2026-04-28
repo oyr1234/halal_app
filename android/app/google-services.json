@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "778647226019",
+    "project_id": "halal-b3fac",
+    "storage_bucket": "halal-b3fac.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:778647226019:android:4a9213fbc52709fe0fa116",
+        "android_client_info": {
+          "package_name": "com.example.halalapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBQ-SMPkGqAUIKLXh7VlWzUsmd78cjdnfE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
